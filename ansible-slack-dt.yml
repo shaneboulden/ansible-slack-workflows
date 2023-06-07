@@ -1,0 +1,56 @@
+---
+- name: Post a slack message with details of a vulnerable workload
+  hosts: all
+  become: no
+  vars_files:
+    - vault.yml
+
+  tasks:
+    - name: Get an access token from OpenShift
+      k8s_auth:
+        username: "{{ vault_openshift_user }}"
+        password: "{{ vault_openshift_pass }}"
+        host: "{{ vault_openshift_host }}"
+        validate_certs: false
+      register: k8s_auth_results
+
+    - name: inspect the auth token
+      debug: var=k8s_auth_results
+
+    - name: Fetch a specific deployment from OpenShift by name
+      kubernetes.core.k8s_info:
+        api_key: "{{ k8s_auth_results.openshift_auth.api_key }}"
+        host: "{{ vault_openshift_host }}"
+        validate_certs: false
+        kind: Deployment
+        name: "{{ deployment_name }}"
+        namespace: "{{ deployment_namespace }}"
+      register: deployment
+
+    - name: inspect the owner tag
+      debug: var=deployment.resources[0].metadata.labels.owner
+
+    - name: inspect the container Image
+      debug: var=deployment.resources[0].spec.template.spec.containers[0].image
+
+    - name: Post a slack message
+      community.general.slack:
+        token: "{{ vault_slack_token }}"
+        msg: |
+           !!! DEMO - Log4Shell vulnerable application !!!
+            -------------------------------------
+            A Log4Shell vulnerable application exploitation attempt has been detected, and your team is being notified to create a patch immediately.
+            -------------------------------------
+            The application details are:
+            
+            Cluster: OpenShift production
+            Namespace: "{{ deployment_namespace }}"
+            Deployment name: "{{ deployment_name }}"
+            Image: "{{ deployment.resources[0].spec.template.spec.containers[0].image }}"
+
+            -------------------------------------
+            This incident is being tracked in SNOW ticket XRS-11458. Please post all updates to the ticket. 
+        channel: "#{{ deployment.resources[0].metadata.labels.owner }}"
+        color: good
+
+
