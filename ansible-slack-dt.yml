@@ -7,7 +7,7 @@
 
   tasks:
     - name: Get an access token from OpenShift
-      k8s_auth:
+      kubernetes.core.k8s_auth:
         username: "{{ vault_openshift_user }}"
         password: "{{ vault_openshift_pass }}"
         host: "{{ vault_openshift_host }}"
