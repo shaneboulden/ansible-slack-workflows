@@ -28,20 +28,21 @@
       community.general.slack:
         token: "{{ vault_slack_token }}"
         msg: |
-           !!! DEMO - Log4Shell vulnerable application !!!
-            -------------------------------------
-            A Log4Shell vulnerable application exploitation attempt has been detected, and your team is being notified to create a patch immediately.
-            -------------------------------------
-            The application details are:
-            
+            Dynatrace has detected Log4Shell exploitation attempts against the following workload: 
+                        
             Cluster: OpenShift production
             Namespace: "{{ deployment_namespace }}"
             Deployment name: "{{ deployment_name }}"
             Image: "{{ deployment.resources[0].spec.template.spec.containers[0].image }}"
 
-            -------------------------------------
-            This incident is being tracked in SNOW ticket XRS-11458. Please post all updates to the ticket. 
-        channel: "#{{ deployment.resources[0].metadata.labels.owner }}"
+            Red Hat Advanced Cluster Security for Kubernetes policies have been updated:
+
+            - Curl execution policy applied
+            - Netcat execution policy applied
+            - Kubernetes network policy locked down
+            - Slack integration created with this channel
+
+        channel: "#devops"
         color: good
 
 
